@@ -31,7 +31,7 @@ class BookSchema(BaseModel):
 
 
 tasks: list[TaskSchema] = []
-boor: str = []
+book: str = ''
 
 
 @app.get('/')
