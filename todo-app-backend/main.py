@@ -26,12 +26,24 @@ class TaskCreateSchema(BaseModel):
     title: str   
 
 
+class BookSchema(BaseModel):
+    book: str
+
+
 tasks: list[TaskSchema] = []
+boor: str = []
 
 
-# @app.get('/')
-# def read_base_page():
-#     return {'message': 'Hello World'}
+@app.get('/')
+def read_base_page():
+    return {'message': f'Любимая книга {book}'}
+
+
+@app.post('/')
+def set_book(payload: BookSchema):
+    global book
+    book = payload.book
+    return {'message': f'Любимая книга {book}'}
 
 
 @app.get('/tasks')
