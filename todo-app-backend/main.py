@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 app = FastAPI()
@@ -85,3 +85,58 @@ def delete_task(task_id):
     for task in tasks:
         if task.id == task_id:
             tasks.remove(task)
+
+
+
+# endpoints /category
+
+
+
+class CategorySchema(BaseModel):
+    id: str
+    name: str | None = Field(max_length=25, min_length=3, default=None)
+
+
+class CategoryCreateSchema(BaseModel):
+    name: str   
+
+
+class CategoryUpdateSchema(BaseModel):
+    name: str | None = Field(max_length=25, min_length=3, default=None)
+
+
+categories: list[TaskSchema] = []
+
+
+@app.get('/categories')
+def read_categories() -> list[CategorySchema]:
+    return categories
+
+
+@app.post('/categories', status_code=status.HTTP_201_CREATED)
+def create_categories(payload: CategoryCreateSchema) -> CategorySchema:
+    new_category = CategorySchema(
+                        id=str(uuid4()),
+                        name=payload.name
+                        )
+    
+    categories.append(new_category)
+
+    return new_category
+
+
+@app.patch('/categories/{id}')
+def update_category(id: str, payload: CategoryUpdateSchema):
+    for category in categories:
+        if category.id == id:
+            if payload.name:
+                category.name = payload.name 
+
+            return category               
+
+
+@app.delete('/categories/{id}', status_code=status.HTTP_204_NO_CONTENT)     
+def delete_category(id):
+    for category in categories:
+        if category.id == id:
+            categories.remove(category)        
