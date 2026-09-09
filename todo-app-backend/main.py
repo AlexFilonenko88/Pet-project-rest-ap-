@@ -129,9 +129,12 @@ def update_task(task_id: str, payload: TaskUpdateSchema, db: Session = Depends(g
 
 @app.delete('/tasks/{task_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(task_id, db: Session = Depends(get_db)) -> None:
-    for task in tasks:
-        if task.id == task_id:
-            tasks.remove(task)
+    task_for_delete = db.get(TaskORM, task_id)
+
+    db.delete(task_for_delete)
+    db.commit()
+
+    return {"msg": True}
 
 
 
