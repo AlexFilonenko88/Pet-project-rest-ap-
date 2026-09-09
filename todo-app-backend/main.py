@@ -1,14 +1,13 @@
 from contextlib import asynccontextmanager
-from email.policy import default
 from uuid import uuid4
 from uuid import UUID
 
 from typing_extensions import Mapping
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 
@@ -68,6 +67,22 @@ tasks: list[TaskSchema] = []
 book: str = ''
 
 
+def get_db():
+    db = Sessionlocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def task_to_model(task_orm: TaskORM) -> TaskSchema:
+    return TaskSchema(
+        id=task_orm.id,
+        title=task_orm.title,
+        completed=task_orm.completed,
+    )
+
+
 @app.get('/')
 def read_base_page():
     return {'message': f'Любимая книга {book}'}
@@ -81,24 +96,25 @@ def set_book(payload: BookSchema):
 
 
 @app.get('/tasks')
-def read_tasks() -> list[TaskSchema]:
-    return tasks
+def read_tasks(db: Session = Depends(get_db)) -> list[TaskSchema]:
+    tasks_from_db = db.scalars(select(TaskORM)).all()
+    return [task_to_model(task) for task in tasks_from_db]
 
 
 @app.post('/tasks', status_code=status.HTTP_201_CREATED)
-def create_task(payload: TaskCreateSchema) -> TaskSchema:
-    new_task = TaskSchema(
-                        id=str(uuid4()),
+def create_task(payload: TaskCreateSchema, db: Session = Depends(get_db)) -> TaskSchema:
+    new_task = TaskORM(
                         title=payload.title,
                         completed=False
                         )
-    tasks.append(new_task)
+    db.add(new_task)
+    db.commit()
 
-    return new_task
+    return task_to_model(new_task)
 
 
 @app.patch('/tasks/{task_id}')
-def update_task(task_id: str, payload: TaskUpdateSchema):
+def update_task(task_id: str, payload: TaskUpdateSchema, db: Session = Depends(get_db)):
     for task in tasks:
         if task.id == task_id:
             if payload.title:
@@ -110,7 +126,7 @@ def update_task(task_id: str, payload: TaskUpdateSchema):
 
 
 @app.delete('/tasks/{task_id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(task_id):
+def delete_task(task_id, db: Session = Depends(get_db)):
     for task in tasks:
         if task.id == task_id:
             tasks.remove(task)
