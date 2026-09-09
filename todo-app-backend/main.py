@@ -63,7 +63,6 @@ class TaskUpdateSchema(BaseModel):
     completed: bool | None = None
 
 
-tasks: list[TaskSchema] = []
 book: str = ''
 
 
