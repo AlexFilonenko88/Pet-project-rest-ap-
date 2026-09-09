@@ -114,19 +114,21 @@ def create_task(payload: TaskCreateSchema, db: Session = Depends(get_db)) -> Tas
 
 
 @app.patch('/tasks/{task_id}')
-def update_task(task_id: str, payload: TaskUpdateSchema, db: Session = Depends(get_db)):
-    for task in tasks:
-        if task.id == task_id:
-            if payload.title:
-                task.title = payload.title
-            if payload.completed is not None:
-                task.completed = payload.completed
+def update_task(task_id: str, payload: TaskUpdateSchema, db: Session = Depends(get_db)) -> TaskSchema:
+    task_for_update = db.get(TaskORM, task_id)
 
-            return task
+    if payload.title:
+        task_for_update.title = payload.title
+    if payload.completed is not None:
+        task_for_update.completed = payload.completed
+
+    db.commit()
+
+    return task_to_model(task_for_update)
 
 
 @app.delete('/tasks/{task_id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(task_id, db: Session = Depends(get_db)):
+def delete_task(task_id, db: Session = Depends(get_db)) -> None:
     for task in tasks:
         if task.id == task_id:
             tasks.remove(task)
