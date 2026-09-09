@@ -1,12 +1,41 @@
+from contextlib import asynccontextmanager
+from email.policy import default
 from uuid import uuid4
 from uuid import UUID
+
+from typing_extensions import Mapping
 
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 
-app = FastAPI()
+DATABASE_URL = "postgresql+psycopg://postgres:admin@127.0.0.1:15432/postgres"
+engine = create_engine(DATABASE_URL)
+Sessionlocal = sessionmaker(bind=engine)
+
+
+class Base(DeclarativeBase):
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
+
+
+class TaskORM(Base):
+    __tablename__ = "tasks"
+
+    title: Mapped[str]
+    completed: Mapped[bool] = mapped_column(default=False)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,7 +52,7 @@ class TaskSchema(BaseModel):
 
 
 class TaskCreateSchema(BaseModel):
-    title: str   
+    title: str
 
 
 class BookSchema(BaseModel):
@@ -73,14 +102,14 @@ def update_task(task_id: str, payload: TaskUpdateSchema):
     for task in tasks:
         if task.id == task_id:
             if payload.title:
-                task.title = payload.title 
+                task.title = payload.title
             if payload.completed is not None:
                 task.completed = payload.completed
 
-            return task       
+            return task
 
 
-@app.delete('/tasks/{task_id}', status_code=status.HTTP_204_NO_CONTENT)     
+@app.delete('/tasks/{task_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(task_id):
     for task in tasks:
         if task.id == task_id:
@@ -98,7 +127,7 @@ class CategorySchema(BaseModel):
 
 
 class CategoryCreateSchema(BaseModel):
-    name: str   
+    name: str
 
 
 class CategoryUpdateSchema(BaseModel):
@@ -119,7 +148,7 @@ def create_categories(payload: CategoryCreateSchema) -> CategorySchema:
                         id=str(uuid4()),
                         name=payload.name
                         )
-    
+
     categories.append(new_category)
 
     return new_category
@@ -130,13 +159,13 @@ def update_category(id: str, payload: CategoryUpdateSchema):
     for category in categories:
         if category.id == id:
             if payload.name:
-                category.name = payload.name 
+                category.name = payload.name
 
-            return category               
+            return category
 
 
-@app.delete('/categories/{id}', status_code=status.HTTP_204_NO_CONTENT)     
+@app.delete('/categories/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_category(id):
     for category in categories:
         if category.id == id:
-            categories.remove(category)        
+            categories.remove(category)
