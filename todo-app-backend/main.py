@@ -1,8 +1,6 @@
 from contextlib import asynccontextmanager
+from unicodedata import category
 from uuid import uuid4
-from uuid import UUID
-
-from typing_extensions import Mapping
 
 from fastapi import FastAPI, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -133,12 +131,18 @@ def delete_task(task_id, db: Session = Depends(get_db)) -> None:
     db.delete(task_for_delete)
     db.commit()
 
-    return {"msg": True}
+    return {"msg": "Task deleted"}
 
 
 
 # endpoints /category
 
+
+
+class CategoryORM(Base):
+    __tablename__ = "categories"
+
+    name: Mapped[str]
 
 
 class CategorySchema(BaseModel):
@@ -154,38 +158,51 @@ class CategoryUpdateSchema(BaseModel):
     name: str | None = Field(max_length=25, min_length=3, default=None)
 
 
-categories: list[TaskSchema] = []
+# categories: list[TaskSchema] = []
+
+
+def category_to_model(category_orm:CategoryORM) -> CategorySchema:
+    return CategorySchema(
+        id=category_orm.id,
+        name=category_orm.name,
+    )
 
 
 @app.get('/categories')
-def read_categories() -> list[CategorySchema]:
-    return categories
+def read_categories(db: Session = Depends(get_db)) -> list[CategorySchema]:
+    categories_from_db = db.scalars(select(CategoryORM)).all()
+    return [category_to_model(category) for category in categories_from_db]
 
 
 @app.post('/categories', status_code=status.HTTP_201_CREATED)
-def create_categories(payload: CategoryCreateSchema) -> CategorySchema:
-    new_category = CategorySchema(
-                        id=str(uuid4()),
-                        name=payload.name
-                        )
+def create_categories(payload: CategoryCreateSchema, db: Session = Depends(get_db)) -> CategorySchema:
+    new_category = CategoryORM(
+                                name=payload.name
+                                )
 
-    categories.append(new_category)
+    db.add(new_category)
+    db.commit()
 
-    return new_category
+    return category_to_model(new_category)
 
 
 @app.patch('/categories/{id}')
-def update_category(id: str, payload: CategoryUpdateSchema):
-    for category in categories:
-        if category.id == id:
-            if payload.name:
-                category.name = payload.name
+def update_category(id: str, payload: CategoryUpdateSchema, db: Session = Depends(get_db)) -> CategorySchema:
+    category_for_update = db.get(CategoryORM, id)
 
-            return category
+    if payload.name:
+        category_for_update.name = payload.name
+
+    db.commit()
+
+    return category_to_model(category_for_update)
 
 
 @app.delete('/categories/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_category(id):
-    for category in categories:
-        if category.id == id:
-            categories.remove(category)
+def delete_category(id: str, db: Session = Depends(get_db)):
+    category_for_delete = db.get(CategoryORM, id)
+
+    db.delete(category_for_delete)
+    db.commit()
+
+    return {"msg": "Category deleted"}
