@@ -15,6 +15,6 @@ def  get_settings() -> Settings:
 
 
 settings = get_settings()
-settings.DATABASE_URL = '123'
+# settings.DATABASE_URL = '123'
 
-print(settings)
+# print(settings)

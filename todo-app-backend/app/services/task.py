@@ -1,7 +1,10 @@
 from sqlalchemy.orm import Session
 from app.repositories.task import TaskRepository
-from app.schemas.task import TaskSchema, TaskCreateSchema, TaskUpdateSchema
+from app.schemas.tasks import TaskSchema, TaskCreateSchema, TaskUpdateSchema
 
+
+class TaskNotFound(Exception):
+    """ Задача не найдена в БД"""
 
 
 class TaskService:
@@ -17,18 +20,18 @@ class TaskService:
 
     def create_task(self, task_create: TaskCreateSchema) -> TaskSchema:
         task = self.task_repository.create(title=task_create.title)
-        task.db.commit()
+        self.db.commit()
         return TaskSchema.model_validate(task)
 
 
     def update_task(self, task_id: str, task_update: TaskUpdateSchema) -> TaskSchema:
-        try:
-            task_for_update = self.task_repository.get_by_id(task_id=task_id)
-        except Exception:
-            raise TaskNotFound("Задача не найдена")
-        if task_update.title:
+        task_for_update = self.task_repository.get_by_id(task_id=task_id)
+        if not task_for_update:
+            raise TaskNotFound(f"Задача c id {task_id} не найдена")
+
+        if task_update.title is not None:
             task_for_update.title = task_update.title
-        if task_update.completed:
+        if task_update.completed is not None:
             task_for_update.completed = task_update.completed
 
         self.db.commit()
@@ -37,4 +40,8 @@ class TaskService:
 
     def delete_task(self, task_id: str) -> TaskSchema:
         task_for_delete = self.task_repository.get_by_id(task_id=task_id)
+        if not task_for_delete:
+            raise TaskNotFound(f"Задача c id {task_id} не найдена")
+
         self.task_repository.delete(task_for_delete)
+        self.db.commit()
