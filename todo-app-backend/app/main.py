@@ -7,6 +7,7 @@ from app.models.base import Base
 from app.db.session import engine
 
 from app.api.routers.task import router as task_router
+from app.api.routers.index import router as index_router
 
 
 @asynccontextmanager
@@ -17,6 +18,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(router=task_router)
+app.include_router(router=index_router)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,18 +28,7 @@ app.add_middleware(
     allow_headers=['*']
 )
 
-book: str = ''
 
-@app.get('/')
-def read_base_page():
-    return {'message': f'Любимая книга {book}'}
-
-
-# @app.post('/')
-# def set_book(payload: BookSchema):
-#     global book
-#     book = payload.book
-#     return {'message': f'Любимая книга {book}'}
 
 
 

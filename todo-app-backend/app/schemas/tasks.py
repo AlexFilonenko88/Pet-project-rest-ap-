@@ -1,10 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
 
-class BookSchema(BaseModel):
-    book: str
-
-
 class TaskSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
