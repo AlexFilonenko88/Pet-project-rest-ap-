@@ -29,19 +29,3 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*']
 )
-
-
-
-
-
-# endpoints /category
-
-
-# # categories: list[TaskSchema] = []
-
-
-# def categ_ory_orm_to_model(category_orm:CategoryORM) -> CategorySchema:
-#     return CategorySchema(
-#         id=category_orm.id,
-#         name=category_orm.name,
-#     )
