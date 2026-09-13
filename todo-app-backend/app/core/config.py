@@ -1,4 +1,9 @@
+import os
+from dotenv import load_dotenv
 from dataclasses import dataclass
+
+
+load_dotenv()
 
 
 @dataclass(frozen=True)
@@ -9,7 +14,7 @@ class Settings:
 
 def  get_settings() -> Settings:
     return Settings(
-        DATABASE_URL = "postgresql+psycopg://postgres:admin@127.0.0.1:15432/postgres",
+        DATABASE_URL = os.getenv("DATABASE_URL"),
         cors_allowed_origin = ["http://localhost:3000"],
     )
 
