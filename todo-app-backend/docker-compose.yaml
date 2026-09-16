@@ -1,4 +1,19 @@
 services:
+  frontend:
+    build:
+      context: ../todo-app-frontend
+      dockerfile: dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../todo-app-frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://localhost:8000  # Передайте URL бэкенда через env
+    depends_on:
+      - backend
+
   backend:
     build: .
     ports:
