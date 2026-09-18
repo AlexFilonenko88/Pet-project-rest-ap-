@@ -2,7 +2,6 @@ import logging
 from contextlib import asynccontextmanager
 from time import perf_counter
 
-from app.api.routers import api_router
 from app.api.routers.category import router as category_router
 from app.api.routers.index import router as index_router
 from app.api.routers.task import router as task_router
@@ -25,6 +24,7 @@ configure_logging()
 app = FastAPI()
 logger = logging.getLogger("app.middleware")
 
+app.state.request_count = 0
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +32,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def count_requests(request: Request, call_next) -> Response:
+    request.app.state.request_count += 1
+    current_number = request.app.state.request_count
+
+    response: Response = await call_next(request)
+    response.headers["X-Request-Number"] = str(current_number)
+    return response
 
 
 @app.middleware("http")
@@ -60,7 +70,6 @@ async def log_requests(request: Request, call_next) -> Response:
     return response
 
 
-# app.include_router(api_router)
 app.include_router(router=index_router)
 app.include_router(router=task_router)
 app.include_router(router=category_router)
