@@ -28,7 +28,7 @@ def create_category(
 
 @router.patch("/{id}")
 def update_category(
-    id: str,
+    id: int,
     payload: CategoryUpdateSchema,
     category_service: CategoryService = Depends(get_category_service),
 ) -> CategorySchema:
@@ -40,9 +40,9 @@ def update_category(
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_category(
-    id: str, category_service: CategoryService = Depends(get_category_service)
+    id: int, category_service: CategoryService = Depends(get_category_service)
 ) -> None:
     try:
-        return category_service.delete_category(category_id=id)
+        category_service.delete_category(category_id=id)
     except CategoryNotFound as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

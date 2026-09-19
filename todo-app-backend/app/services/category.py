@@ -29,7 +29,7 @@ class CategoryService:
         return CategorySchema.model_validate(category)
 
     def update_category(
-        self, category_id: str, category_update: CategoryUpdateSchema
+        self, category_id: int, category_update: CategoryUpdateSchema
     ) -> CategorySchema:
         category_for_update = self.category_repository.get_by_id(
             category_id=category_id
@@ -44,7 +44,7 @@ class CategoryService:
         self.db.commit()
         return CategorySchema.model_validate(category_for_update)
 
-    def delete_category(self, category_id: str) -> CategorySchema:
+    def delete_category(self, category_id: int) -> None:
         category_for_delete = self.category_repository.get_by_id(
             category_id=category_id
         )
