@@ -1,7 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-
-book: str = ''
+book: str = ""
 
 
 class BookSchema(BaseModel):

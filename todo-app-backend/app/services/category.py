@@ -1,10 +1,15 @@
 from sqlalchemy.orm import Session
+
 from app.repositories.category import CategoryRepository
-from app.schemas.category import CategorySchema, CategoryCreateSchema, CategoryUpdateSchema
+from app.schemas.category import (
+    CategoryCreateSchema,
+    CategorySchema,
+    CategoryUpdateSchema,
+)
 
 
 class CategoryNotFound(Exception):
-    """ Задача не найдена в БД"""
+    """Задача не найдена в БД"""
 
 
 class CategoryService:
@@ -12,12 +17,10 @@ class CategoryService:
         self.db = db
         self.category_repository = CategoryRepository(db)
 
-
     def list_categories(self) -> list[CategorySchema]:
         category_orm = self.category_repository.get_all()
 
         return [CategorySchema.model_validate(category) for category in category_orm]
-
 
     def create_category(self, category_create: CategoryCreateSchema) -> CategorySchema:
         category = self.category_repository.create(name=category_create.name)
@@ -25,9 +28,12 @@ class CategoryService:
         self.db.commit()
         return CategorySchema.model_validate(category)
 
-
-    def update_category(self, category_id: str, category_update: CategoryUpdateSchema) -> CategorySchema:
-        category_for_update = self.category_repository.get_by_id(category_id=category_id)
+    def update_category(
+        self, category_id: int, category_update: CategoryUpdateSchema
+    ) -> CategorySchema:
+        category_for_update = self.category_repository.get_by_id(
+            category_id=category_id
+        )
 
         if not category_for_update:
             raise CategoryNotFound(f"Задача c id {category_id} не найдена")
@@ -38,9 +44,10 @@ class CategoryService:
         self.db.commit()
         return CategorySchema.model_validate(category_for_update)
 
-
-    def delete_category(self, category_id: str) -> CategorySchema:
-        category_for_delete = self.category_repository.get_by_id(category_id=category_id)
+    def delete_category(self, category_id: int) -> None:
+        category_for_delete = self.category_repository.get_by_id(
+            category_id=category_id
+        )
 
         if not category_for_delete:
             raise CategoryNotFound(f"Задача c id {category_id} не найдена")
