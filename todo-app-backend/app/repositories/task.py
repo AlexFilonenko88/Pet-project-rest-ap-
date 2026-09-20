@@ -13,7 +13,7 @@ class TaskRepository:
     def get_all(self) -> Sequence[TaskORM]:
         return self.db.scalars(select(TaskORM)).all()
 
-    def get_by_id(self, task_id: int) -> TaskORM | None:
+    def get_by_id(self, task_id: str) -> TaskORM | None:
         return self.db.get(TaskORM, task_id)
 
     def create(self, title: str) -> TaskORM:

@@ -17,7 +17,15 @@ repos:
 
       - id: mypy
         name: mypy
-        entry: mypy
+        entry: bash -c 'cd todo-app-backend && .venv/bin/mypy app'
         language: system
         pass_filenames: false
         types_or: [python]
+
+      - id: pytest
+        name: pytest
+        entry: bash -c 'cd todo-app-backend && .venv/bin/python -m pytest'
+        language: system
+        pass_filenames: false
+        types_or: [python]
+        always_run: true
