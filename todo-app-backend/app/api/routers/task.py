@@ -23,7 +23,7 @@ def create_task(
 
 @router.patch("/{task_id}")
 def update_task(
-    task_id: int,
+    task_id: str,
     payload: TaskUpdateSchema,
     task_service: TaskService = Depends(get_task_service),
 ) -> TaskSchema:
@@ -35,7 +35,7 @@ def update_task(
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(
-    task_id: int, task_service: TaskService = Depends(get_task_service)
+    task_id: str, task_service: TaskService = Depends(get_task_service)
 ) -> None:
     try:
         task_service.delete_task(task_id=task_id)

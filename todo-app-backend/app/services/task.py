@@ -9,9 +9,9 @@ class TaskNotFound(Exception):
 
 
 class TaskService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, task_repository: TaskRepository | None = None):
         self.db = db
-        self.task_repository = TaskRepository(db)
+        self.task_repository = task_repository or TaskRepository(db)
 
     def list_tasks(self) -> list[TaskSchema]:
         tasks_orm = self.task_repository.get_all()
@@ -22,7 +22,7 @@ class TaskService:
         self.db.commit()
         return TaskSchema.model_validate(task)
 
-    def update_task(self, task_id: int, task_update: TaskUpdateSchema) -> TaskSchema:
+    def update_task(self, task_id: str, task_update: TaskUpdateSchema) -> TaskSchema:
         task_for_update = self.task_repository.get_by_id(task_id=task_id)
         if not task_for_update:
             raise TaskNotFound(f"Задача c id {task_id} не найдена")
@@ -35,7 +35,7 @@ class TaskService:
         self.db.commit()
         return TaskSchema.model_validate(task_for_update)
 
-    def delete_task(self, task_id: int) -> None:
+    def delete_task(self, task_id: str) -> None:
         task_for_delete = self.task_repository.get_by_id(task_id=task_id)
         if not task_for_delete:
             raise TaskNotFound(f"Задача c id {task_id} не найдена")
