@@ -13,7 +13,7 @@ class CategoryRepository:
     def get_all(self) -> Sequence[CategoryORM]:
         return self.db.scalars(select(CategoryORM)).all()
 
-    def get_by_id(self, category_id: int) -> CategoryORM | None:
+    def get_by_id(self, category_id: str) -> CategoryORM | None:
         return self.db.get(CategoryORM, category_id)
 
     def create(self, name: str) -> CategoryORM:
