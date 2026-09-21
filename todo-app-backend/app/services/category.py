@@ -9,13 +9,15 @@ from app.schemas.category import (
 
 
 class CategoryNotFound(Exception):
-    """Задача не найдена в БД"""
+    """Категория не найдена в БД"""
 
 
 class CategoryService:
-    def __init__(self, db: Session):
+    def __init__(
+        self, db: Session, category_repository: CategoryRepository | None = None
+    ):
         self.db = db
-        self.category_repository = CategoryRepository(db)
+        self.category_repository = category_repository or CategoryRepository(db)
 
     def list_categories(self) -> list[CategorySchema]:
         category_orm = self.category_repository.get_all()
@@ -29,7 +31,7 @@ class CategoryService:
         return CategorySchema.model_validate(category)
 
     def update_category(
-        self, category_id: int, category_update: CategoryUpdateSchema
+        self, category_id: str, category_update: CategoryUpdateSchema
     ) -> CategorySchema:
         category_for_update = self.category_repository.get_by_id(
             category_id=category_id
@@ -44,7 +46,7 @@ class CategoryService:
         self.db.commit()
         return CategorySchema.model_validate(category_for_update)
 
-    def delete_category(self, category_id: int) -> None:
+    def delete_category(self, category_id: str) -> None:
         category_for_delete = self.category_repository.get_by_id(
             category_id=category_id
         )
